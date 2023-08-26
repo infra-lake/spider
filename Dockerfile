@@ -1,7 +1,7 @@
 FROM nginx
 
 RUN apt-get update; \
-    apt-get install -y curl unzip watch cron; \
+    apt-get install -y curl unzip; \
     curl https://rclone.org/install.sh | bash
 
 RUN mkdir /opt/app
