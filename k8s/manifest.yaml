@@ -1,0 +1,74 @@
+# Create namespace: kubectl create namespace spider
+# Create secret witch command:  kubectl create secret generic google-credential --from-file=key.json=./key.json -n spider
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infralake-spider
+  namespace: spider
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infralake-spider
+  template:
+    metadata:
+      labels:
+        app: infralake-spider
+    spec:
+      containers:
+        - name: infralake-spider
+          image: infralake/spider
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: credential-volume
+              mountPath: /opt/app/key.json
+              subPath: key.json
+          env:
+            - name: BUCKET_NAME
+              value: "name-of-bucket" #Name of the GCP bucket where the site static files will be synced.
+            - name: SYNC_TIME
+              value: "10" #Period in seconds that a new sync will happen.
+      volumes:
+        - name: credential-volume
+          secret:
+            secretName: google-credential
+            items:
+              - key: key.json
+                path: key.json
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: infralake-spider-service
+  namespace: spider
+spec:
+  selector:
+    app: infralake-spider
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: infralake-spider-ingress
+spec:
+  tls:
+    - hosts:
+        - your.domain.com
+      secretName: yourdomain-tls
+  rules:
+    - host: your.domain.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: infralake-spider-service
+                port:
+                  number: 4000
+
