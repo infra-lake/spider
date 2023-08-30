@@ -55,11 +55,12 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: infralake-spider-ingress
+  namespace: spider
 spec:
   tls:
     - hosts:
         - your.domain.com
-      secretName: yourdomain-tls
+      secretName: yourdomain-tls #Add certificate domain for SSL/HTTPS
   rules:
     - host: your.domain.com
       http:
